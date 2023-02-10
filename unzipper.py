@@ -30,12 +30,12 @@ def unzip_submissions():
         print(f"Unzipping {submission_name}")
         
         # Create {ID}.pdf in STUDENT_PDF_PATH for each student zip, if that file doesn't already exist (if it wasn't deleted from a prior run of the program).
-        if not os.path.exists(f"{STUDENT_PDF_PATH}/{id}.pdf"):
-            with zipfile.ZipFile(f"{STUDENT_ZIP_PATH}/{submission_name}") as z:
+        if not os.path.exists(os.path.join(STUDENT_PDF_PATH, f"{id}.pdf")):
+            with zipfile.ZipFile(os.path.join(STUDENT_ZIP_PATH, submission_name)) as z:
                 for file in z.namelist():
                     if file.endswith(".pdf"):
                         z.extract(file, STUDENT_PDF_PATH)
-                        os.rename(f"{STUDENT_PDF_PATH}/{file}", f"{STUDENT_PDF_PATH}/{id}.pdf")
+                        os.rename(os.path.join(STUDENT_PDF_PATH, file), os.path.join(STUDENT_PDF_PATH, f"{id}.pdf"))
 
 
 # Can run this file on its own for testing purposes.
