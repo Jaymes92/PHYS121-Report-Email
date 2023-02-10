@@ -1,6 +1,5 @@
 import zipfile
 import os
-from time import time
 
 
 MAIN_ZIP = "./submissions.zip"
@@ -8,20 +7,8 @@ STUDENT_PDF_PATH = "./student-unzip/student-pdfs"
 STUDENT_ZIP_PATH = "./student-unzip/student-zips"
 
 
-# Timer decorator to for testing my function's speeds.
-def timer_func(func):
-    def wrap_func(*args, **kwargs):
-        t1 = time()
-        result = func(*args, **kwargs)
-        t2 = time()
-        print(f"Function {func.__name__!r} executed in {(t2-t1):.4f}s")
-        return result
-    return wrap_func
-
-
 # Create STUDENT_PDF_PATH and STUDENT_ZIP_PATH. Extract all zip submissions unaltered to STUDENT_ZIP_PATH. 
 # Extract the singular pdf export from each student's zip, rename to {ID}.pdf, and save to STUDENT_PDF_PATH. ID is Canvas ID and NOT student number.
-@timer_func
 def unzip_submissions():
     os.makedirs(STUDENT_PDF_PATH, exist_ok=True)
     os.makedirs(STUDENT_ZIP_PATH, exist_ok=True)

@@ -3,12 +3,14 @@ from PyPDF2 import PdfMerger
 from zipfile import ZipFile
 import os
 import pandas as pd
-from unzipper import unzip_submissions, STUDENT_PDF_PATH, timer_func
+from unzipper import unzip_submissions, STUDENT_PDF_PATH
 from tkinter.filedialog import askopenfilename
+
 
 # Name the directories to be created (to hold intermediate cover pages and finished combined reports).
 COVER_PAGE_PATH = "./cover-pages"
 REPORT_PATH = "./combined-reports"
+
 
 # GUI to select the Canvas export (needed to link SIS ID to Student number), otter-grader 'final grade' export for the current assignment,
 # otter-grader solution, solution raw .ipynb printout (both included in each .zip), and "assignment_config" containing questions to ignore and manual grade info.
@@ -38,7 +40,6 @@ class Student():
 
 # Create and save cover page for the passed in student. Saved as "{SISID}_cover.pdf" in the REPORT_PATH.
 # Show student name, number, lab section then a summary of the auto-graded results.
-@timer_func
 def create_cover_page(student: Student) -> None:
     c = canvas.Canvas(f"{COVER_PAGE_PATH}/{student.id}_cover.pdf")
     c.drawString(100, 800, f"Name: {student.name}")
@@ -94,7 +95,6 @@ def create_cover_page(student: Student) -> None:
 
 
 # Create and return list of Student objects for submissions that have existing zip files
-@timer_func
 def create_student_list() -> list[Student]:
     students = []
     # os.listdir() will include the diretories - this makes sure to only include the zip files
@@ -113,7 +113,6 @@ def create_student_list() -> list[Student]:
     
 
 # Add a column to the otter-grade export dataframe for student id to reference for creating grades on the cover pages.
-@timer_func
 def add_grade_id() -> None:
     id_list =[]
     for file in final_grades_df["file"]:
@@ -126,7 +125,6 @@ def add_grade_id() -> None:
 
 # Input list of sections. Create an individual directory for each section, create combined report for each student in that section
 # (a cover page + otter-grader pdf export) and create a .zip of these files for each section.
-@timer_func
 def create_section_report(sections: list[str], assignment_name) -> None:
 
     unzip_submissions()
