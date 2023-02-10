@@ -1,9 +1,11 @@
 __pycache__/
 .venv/
 TA_info.json
+submissions.zip
+student-unzip/
 
 # No pdfs in any directory - to remove all pdf solutions
 **/*.pdf 
 
-# Ignore Canvas grade export as a csv in the base directory
+# Ignore Canvas grade export as a csv in the base directory, as name changes
 /*.csv
