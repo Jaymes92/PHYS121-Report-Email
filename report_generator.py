@@ -3,7 +3,7 @@ from PyPDF2 import PdfMerger
 from zipfile import ZipFile
 import os
 import pandas as pd
-from unzipper import unzip_submissions, PDF_UNZIP_PATH, timer_func
+from unzipper import unzip_submissions, STUDENT_PDF_PATH, timer_func
 from tkinter.filedialog import askopenfilename
 
 # Name the directories to be created (to hold intermediate cover pages and finished combined reports).
@@ -98,7 +98,7 @@ def create_cover_page(student: Student) -> None:
 def create_student_list() -> list[Student]:
     students = []
     # os.listdir() will include the diretories - this makes sure to only include the zip files
-    submission_list = [s for s in os.listdir(PDF_UNZIP_PATH) if os.path.isfile(f"{PDF_UNZIP_PATH}/{s}")]
+    submission_list = [s for s in os.listdir(STUDENT_PDF_PATH) if os.path.isfile(f"{STUDENT_PDF_PATH}/{s}")]
 
     for submission in submission_list:
         id = submission.split(".")[0]
@@ -149,7 +149,7 @@ def create_section_report(sections: list[str], assignment_name) -> None:
             create_cover_page(student)
             merger = PdfMerger()
             merger.append(f"{COVER_PAGE_PATH}/{student.id}_cover.pdf")
-            merger.append(f"{PDF_UNZIP_PATH}/{student.id}.pdf")
+            merger.append(f"{STUDENT_PDF_PATH}/{student.id}.pdf")
             merger.write(f"{REPORT_PATH}/{section}/{student.name}_{student.student_number}.pdf")
             merger.close()
 
