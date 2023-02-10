@@ -2,9 +2,9 @@ import zipfile
 import os
 
 
-MAIN_ZIP = "./submissions.zip"
-STUDENT_PDF_PATH = "./student-unzip/student-pdfs"
-STUDENT_ZIP_PATH = "./student-unzip/student-zips"
+MAIN_ZIP = "submissions.zip"
+STUDENT_PDF_PATH = os.path.join("student-unzip", "student-pdfs")
+STUDENT_ZIP_PATH = os.path.join("student-unzip", "student-zips")
 
 
 # Create STUDENT_PDF_PATH and STUDENT_ZIP_PATH. Extract all zip submissions unaltered to STUDENT_ZIP_PATH. 
@@ -25,17 +25,20 @@ def unzip_submissions():
         # If a submission is late, "LATE" will appear where the id normally would be and traverse one further _ separator.
         if id == "LATE":
             id = submission_name.split('_')[2]
-
-        # Sometimes students upload corrupt zips. They will crash the program here, so this is for debugging who caused crash on unzipping.
-        print(f"Unzipping {submission_name}")
         
-        # Create {ID}.pdf in STUDENT_PDF_PATH for each student zip, if that file doesn't already exist (if it wasn't deleted from a prior run of the program).
-        if not os.path.exists(os.path.join(STUDENT_PDF_PATH, f"{id}.pdf")):
+        # Create {ID}.pdf in STUDENT_PDF_PATH for each student zip. Print error if {ID}.pdf already exists. This means clean out that folder and try again.
+        # Catch and print any corrupted zips uploaded by students.
+        try:
             with zipfile.ZipFile(os.path.join(STUDENT_ZIP_PATH, submission_name)) as z:
                 for file in z.namelist():
                     if file.endswith(".pdf"):
                         z.extract(file, STUDENT_PDF_PATH)
-                        os.rename(os.path.join(STUDENT_PDF_PATH, file), os.path.join(STUDENT_PDF_PATH, f"{id}.pdf"))
+                        try:
+                            os.rename(os.path.join(STUDENT_PDF_PATH, file), os.path.join(STUDENT_PDF_PATH, f"{id}.pdf"))
+                        except FileExistsError:
+                            print(f"Tried renaming {os.path.join(STUDENT_PDF_PATH, file)} to {os.path.join(STUDENT_PDF_PATH, f'{id}.pdf')}, but file already exists.")
+        except zipfile.BadZipFile:
+                        print(f"Can't unzip {os.path.join(STUDENT_ZIP_PATH, submission_name)}, file most likely corrupt.")
 
 
 # Can run this file on its own for testing purposes.
