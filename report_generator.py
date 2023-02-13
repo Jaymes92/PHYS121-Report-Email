@@ -4,26 +4,23 @@ from zipfile import ZipFile
 import os
 import pandas as pd
 from unzipper import unzip_submissions, STUDENT_PDF_PATH
-from tkinter.filedialog import askopenfilename
 
 
 # Name the directories to be created (to hold intermediate cover pages and finished combined reports).
-COVER_PAGE_PATH = "./cover-pages"
-REPORT_PATH = "./combined-reports"
+COVER_PAGE_PATH = "cover-pages"
+REPORT_PATH = "combined-reports"
 
 
-# GUI to select the Canvas export (needed to link SIS ID to Student number), otter-grader 'final grade' export for the current assignment,
-# otter-grader solution, solution raw .ipynb printout (both included in each .zip), and "assignment_config" containing questions to ignore and manual grade info.
-canvas_grades_df = pd.read_csv(askopenfilename(initialdir="./", title="Select the CANVAS GRADE EXPORT", filetypes=[("csv", "*.csv")]), dtype=str)
-final_grades_df = pd.read_csv(askopenfilename(initialdir="./", title="Select the OTTER GRADER EXPORT", filetypes=[("csv", "*.csv")]))
-
-solution_file = askopenfilename(initialdir="./", title="Select the OTTER GRADER SOLUTION", filetypes=[("pdf", "*.pdf")])
-solution_file_full_print = askopenfilename(initialdir="./", title="Select the NOTEBOOK FULL PRINT", filetypes=[("pdf", "*.pdf")])
-
-assignment_config = pd.read_csv(askopenfilename(initialdir="./", title="Select the ASSIGNMENT CONFIG FILE", filetypes=[("csv", "*.csv")]))
-ignore_questions = assignment_config["Ignore"].to_list()
-manual_questions = [q for q in assignment_config["Manual Questions"].to_list() if str(q) != 'nan']
-manual_grade_total = int(assignment_config["Manual Grade"][0])
+def initialize_paths(ASSIGNMENT_NAME: str) -> None:
+    global canvas_grades_df, final_grades_df, solution_file, solution_file_full_print, ignore_questions, manual_questions, manual_grade_total
+    canvas_grades_df = pd.read_csv("PHYS121 2022W2 Canvas Sheet Export.csv", dtype=str)
+    final_grades_df = pd.read_csv(os.path.join(ASSIGNMENT_NAME, "final_grades.csv"))
+    solution_file = os.path.join(ASSIGNMENT_NAME, f"_PHYS 121 - {ASSIGNMENT_NAME} - soln.pdf")
+    solution_file_full_print = os.path.join(ASSIGNMENT_NAME, f"_PHYS 121 - {ASSIGNMENT_NAME} - soln (.ipynb complete print).pdf")
+    assignment_config = pd.read_csv(os.path.join(ASSIGNMENT_NAME, f"{ASSIGNMENT_NAME} Config.csv"))
+    ignore_questions = assignment_config["Ignore"].to_list()
+    manual_questions = [q for q in assignment_config["Manual Questions"].to_list() if str(q) != 'nan']
+    manual_grade_total = int(assignment_config["Manual Grade"][0])
 
 
 # Note that id is different than student_number. Id is some SIS ID number you can map to student number using the Canvas grade export.
