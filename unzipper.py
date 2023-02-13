@@ -38,14 +38,9 @@ def unzip_submissions():
                             os.rename(os.path.join(STUDENT_PDF_PATH, file), os.path.join(STUDENT_PDF_PATH, f"{id}.pdf"))
                         except FileExistsError:
                             print(f"Tried renaming {os.path.join(STUDENT_PDF_PATH, file)} to {os.path.join(STUDENT_PDF_PATH, f'{id}.pdf')}, but file already exists.")
+                            os.remove(os.path.join(STUDENT_PDF_PATH, file))
         except zipfile.BadZipFile:
                         print(f"Can't unzip {os.path.join(STUDENT_ZIP_PATH, submission_name)}, file most likely corrupt.")
-
-
-# Delete file MAIN_ZIP and directories STUDENT_PDF_PATH and STUDENT_ZIP_PATH, along with their contents.
-def cleanup():
-    os.remove(MAIN_ZIP)
-    shutil.rmtree("student-unzip")
 
 
 # Can run this file on its own for testing purposes.
