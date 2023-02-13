@@ -3,6 +3,9 @@ __pycache__/
 TA_info.json
 submissions.zip
 student-unzip/
+combined-reports/
+cover-pages/
+**/final_grades.csv
 
 # No pdfs in any directory - to remove all pdf solutions
 **/*.pdf 
