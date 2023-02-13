@@ -1,5 +1,6 @@
 import zipfile
 import os
+import shutil
 
 
 MAIN_ZIP = "submissions.zip"
@@ -39,6 +40,12 @@ def unzip_submissions():
                             print(f"Tried renaming {os.path.join(STUDENT_PDF_PATH, file)} to {os.path.join(STUDENT_PDF_PATH, f'{id}.pdf')}, but file already exists.")
         except zipfile.BadZipFile:
                         print(f"Can't unzip {os.path.join(STUDENT_ZIP_PATH, submission_name)}, file most likely corrupt.")
+
+
+# Delete file MAIN_ZIP and directories STUDENT_PDF_PATH and STUDENT_ZIP_PATH, along with their contents.
+def cleanup():
+    os.remove(MAIN_ZIP)
+    shutil.rmtree("student-unzip")
 
 
 # Can run this file on its own for testing purposes.
