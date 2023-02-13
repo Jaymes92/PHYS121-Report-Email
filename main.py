@@ -4,11 +4,11 @@ import json
 
 TA_INFO = json.load(open('TA_info.json', 'r'))
 ASSIGNMENT_NAME = "Pre-Lab 1"
-SECTION_LIST = ["L01"]
+SECTION_LIST = ["L01", "L02", "L03"]
 
 
 initialize_paths(ASSIGNMENT_NAME)
-create_section_report(SECTION_LIST, ASSIGNMENT_NAME)
+create_section_report(SECTION_LIST)
 
 outlook = Dispatch('outlook.application')
 

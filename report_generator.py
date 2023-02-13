@@ -11,18 +11,6 @@ COVER_PAGE_PATH = "cover-pages"
 REPORT_PATH = "combined-reports"
 
 
-def initialize_paths(ASSIGNMENT_NAME: str) -> None:
-    global canvas_grades_df, final_grades_df, solution_file, solution_file_full_print, ignore_questions, manual_questions, manual_grade_total
-    canvas_grades_df = pd.read_csv("PHYS121 2022W2 Canvas Sheet Export.csv", dtype=str)
-    final_grades_df = pd.read_csv(os.path.join(ASSIGNMENT_NAME, "final_grades.csv"))
-    solution_file = os.path.join(ASSIGNMENT_NAME, f"_PHYS 121 - {ASSIGNMENT_NAME} - soln.pdf")
-    solution_file_full_print = os.path.join(ASSIGNMENT_NAME, f"_PHYS 121 - {ASSIGNMENT_NAME} - soln (.ipynb complete print).pdf")
-    assignment_config = pd.read_csv(os.path.join(ASSIGNMENT_NAME, f"{ASSIGNMENT_NAME} Config.csv"))
-    ignore_questions = assignment_config["Ignore"].to_list()
-    manual_questions = [q for q in assignment_config["Manual Questions"].to_list() if str(q) != 'nan']
-    manual_grade_total = int(assignment_config["Manual Grade"][0])
-
-
 # Note that id is different than student_number. Id is some SIS ID number you can map to student number using the Canvas grade export.
 class Student():
     def __init__(self, name, id, student_number, section) -> None:
@@ -35,27 +23,50 @@ class Student():
         return f"Name: {self.name}\nId: {self.id}\nStudent Number: {self.student_number}\nSection: {self.section}\n"
 
 
-# Create and save cover page for the passed in student. Saved as "{SISID}_cover.pdf" in the REPORT_PATH.
+# Import all data and filepaths that are needed to compile the zip files for distribution.
+# Read CSV's as DataFrames: 
+# 1. canvas_grades_df: Entire Gradebook from Canvas to map student ID to student number and lab sections.
+# 2. final_grades_df: The grade csv produced from marking using otter-grader.
+# 3. assignment_config: Manually created config files to dictate manually graded questions/weights for each assignment.
+# Include two solution PDF paths. Make note of the name - I add an '_' to the start of the name so they appear at the top of a file list.
+def initialize_paths(assignment: str) -> None:
+    global canvas_grades_df, final_grades_df, solution_file, solution_file_full_print, ignore_questions, manual_questions, manual_grade_total, ASSIGNMENT_NAME
+    ASSIGNMENT_NAME = assignment
+
+    canvas_grades_df = pd.read_csv("PHYS121 2022W2 Canvas Sheet Export.csv", dtype=str)
+    final_grades_df = pd.read_csv(os.path.join(ASSIGNMENT_NAME, "final_grades.csv"))
+
+    solution_file = os.path.join(ASSIGNMENT_NAME, f"_PHYS 121 - {ASSIGNMENT_NAME} - soln.pdf")
+    solution_file_full_print = os.path.join(ASSIGNMENT_NAME, f"_PHYS 121 - {ASSIGNMENT_NAME} - soln (.ipynb complete print).pdf")
+
+    assignment_config = pd.read_csv(os.path.join(ASSIGNMENT_NAME, f"{ASSIGNMENT_NAME} Config.csv"))
+    ignore_questions = assignment_config["Ignore"].to_list() # List of auto-graded questions worth 0, to be exclued from cover page list.
+    manual_questions = [q for q in assignment_config["Manual Questions"].to_list() if str(q) != 'nan'] # List of 'QUESTION,GRADE' strings for cover page formatting.
+    manual_grade_total = int(assignment_config["Manual Grade"][0]) # Total of all manually graded components.
+
+
+# Create and save cover page for the passed in student. Saved as "{ID}_cover.pdf" in the REPORT_PATH.
 # Show student name, number, lab section then a summary of the auto-graded results.
 def create_cover_page(student: Student) -> None:
-    c = canvas.Canvas(f"{COVER_PAGE_PATH}/{student.id}_cover.pdf")
+    c = canvas.Canvas(os.path.join(COVER_PAGE_PATH, f"{student.id}_cover.pdf"))
     c.drawString(100, 800, f"Name: {student.name}")
     c.drawString(100, 780, f"Student Number: {student.student_number}")
     c.drawString(100, 760, f"Section: {student.section}")
     
     # Get student autograder results by id, trim first two columns ("file", and "id")
     student_grade_df = final_grades_df.loc[final_grades_df["id"] == student.id].iloc[:, 2:]
-    question_index = 1 # Question index will increment always (regardless if ignored) 
-    line_index = 1 # Line index only incremented when line drawn (to keep spacing consistent when question is ignored)
-    autograde_mark = 0
-    autograde_total = 0
+    question_index = 1 # Question index will increment always (regardless if ignored) .
+    line_index = 1 # Line index only incremented when line drawn (to keep spacing consistent when question is ignored).
+    autograde_mark = 0 # Sum of student's auto-graded marks.
+    autograde_total = 0 # Sum of totally available auto-graded marks.
 
     c.drawString(100, 740 - line_index * 20, "AUTO GRADED RESULTS")
     line_index += 1
 
-    for question_label in student_grade_df.iloc[:, :-1]: # Cut off last column as it is the fractional total percent grade
+    # Every auto-graded question that isn't ignored is worth 1. 
+    for question_label in student_grade_df.iloc[:, :-1]: # Cut off last column as it is the fractional total grade.
         if question_label not in ignore_questions:
-            question_score = student_grade_df.iat[0, question_index - 1] # Q1 is column 0, etc.. so offset by one
+            question_score = student_grade_df.iat[0, question_index - 1] # Q1 is column 0, etc.. so offset by one. Student's grade for this question.
             c.drawString(100, 740 - line_index * 20, question_label)
             c.drawString(300, 740 - line_index * 20, str(question_score))
             autograde_mark += question_score
@@ -63,7 +74,7 @@ def create_cover_page(student: Student) -> None:
             autograde_total += 1
         question_index += 1
 
-    percent_grade = student_grade_df.iat[0, question_index - 1] * 100
+    percent_grade = student_grade_df.iat[0, question_index - 1] * 100 # Last column is fractional grade total for student.
     c.drawString(100, 740 - line_index * 20, "-" * 100)
     line_index += 1
     c.drawString(100, 740 - (line_index) * 20, f"Auto Graded Total:")
@@ -73,6 +84,7 @@ def create_cover_page(student: Student) -> None:
     line_index += 1
     c.drawString(100, 740 - line_index * 20, "MANUAL GRADED RESULTS")
     line_index += 1
+    # List of manual_questions is stored as "QUESTION,GRADE", split to format manually graded section to be filled in by TA.
     for question in manual_questions:
         manual_question_name = question.split(",")[0]
         manual_question_grade = question.split(",")[1]
@@ -95,7 +107,7 @@ def create_cover_page(student: Student) -> None:
 def create_student_list() -> list[Student]:
     students = []
     # os.listdir() will include the diretories - this makes sure to only include the zip files
-    submission_list = [s for s in os.listdir(STUDENT_PDF_PATH) if os.path.isfile(f"{STUDENT_PDF_PATH}/{s}")]
+    submission_list = [s for s in os.listdir(STUDENT_PDF_PATH) if os.path.isfile(os.path.join(STUDENT_PDF_PATH, s))]
 
     for submission in submission_list:
         id = submission.split(".")[0]
@@ -113,7 +125,9 @@ def create_student_list() -> list[Student]:
 def add_grade_id() -> None:
     id_list =[]
     for file in final_grades_df["file"]:
+        # By default the Canvas submissions are named {name}_{id}_{otherstuff}.
         id = file.split("_")[1]
+        # If a submission is late, "LATE" will appear where the id normally would be and traverse one further _ separator.
         if id == "LATE":
             id = file.split("_")[2]
         id_list.append(id)
@@ -122,39 +136,35 @@ def add_grade_id() -> None:
 
 # Input list of sections. Create an individual directory for each section, create combined report for each student in that section
 # (a cover page + otter-grader pdf export) and create a .zip of these files for each section.
-def create_section_report(sections: list[str], assignment_name) -> None:
+def create_section_report(sections: list[str]) -> None:
 
     unzip_submissions()
     add_grade_id()
     students = create_student_list()
 
-    if not os.path.exists(COVER_PAGE_PATH):
-        os.mkdir(COVER_PAGE_PATH)
-    if not os.path.exists(REPORT_PATH):
-        os.mkdir(REPORT_PATH)
+    os.makedirs(COVER_PAGE_PATH, exist_ok=True)
 
     # Create new directory with individual combined PDFs and one .zip for each passed in section
     for section in sections:
-        if not os.path.exists(f"{REPORT_PATH}/{section}"):
-            os.mkdir(f"{REPORT_PATH}/{section}")
+        os.makedirs(os.path.join(REPORT_PATH, section), exist_ok=True)
 
         # Create and combine cover page with student PDF otter-grader export for each student in the given section.
         section_student_list = [student for student in students if student.section == section]
         for student in section_student_list:
             create_cover_page(student)
             merger = PdfMerger()
-            merger.append(f"{COVER_PAGE_PATH}/{student.id}_cover.pdf")
-            merger.append(f"{STUDENT_PDF_PATH}/{student.id}.pdf")
-            merger.write(f"{REPORT_PATH}/{section}/{student.name}_{student.student_number}.pdf")
+            merger.append(os.path.join(COVER_PAGE_PATH, f"{student.id}_cover.pdf")  )
+            merger.append(os.path.join(STUDENT_PDF_PATH, f"{student.id}.pdf")  )
+            merger.write(os.path.join(REPORT_PATH, section, f"{student.name}_{student.student_number}.pdf"))
             merger.close()
 
         # Take every combined report for students in the given section and put in one .zip for TA distribution.
-        with ZipFile(f"{REPORT_PATH}/{section}/{assignment_name}_{section}.zip", "w") as zip:
-            for path, directories, files in os.walk(f"{REPORT_PATH}/{section}"):
+        with ZipFile(os.path.join(REPORT_PATH, section, f"{ASSIGNMENT_NAME}_{section}.zip"), "w") as zip:
+            for path, directories, files in os.walk(os.path.join(REPORT_PATH,section)):
                 for file in files:
                     # Have to exclude .zip - otherwise it tries to zip itself (recursively?) and hangs.
                     if not file.endswith(".zip"):
-                        zip.write(f"{REPORT_PATH}/{section}/{file}", file)
+                        zip.write(os.path.join(REPORT_PATH, section, file), file)
                 
             zip.write(solution_file, os.path.basename(solution_file))
             zip.write(solution_file_full_print, os.path.basename(solution_file_full_print))
