@@ -1,6 +1,6 @@
 import zipfile
 import os
-import PyPDF2
+import fitz
 
 
 MAIN_ZIP = "submissions.zip"
@@ -37,24 +37,29 @@ def unzip_submissions():
                         z.extract(file, STUDENT_PDF_PATH)
 
                         # Open the student's pdf file.
-                        pdf_file = PyPDF2.PdfReader(os.path.join(STUDENT_PDF_PATH, file))
-                        # Writer to only write non-blank pages.
-                        output_pdf = PyPDF2.PdfWriter()
+                        pdf_file = fitz.open(os.path.join(STUDENT_PDF_PATH, file))
+                        # Make note of which pages are blank and marked for deletion after iterating through whole pdf.
+                        # Trying to delete as we iterate through alters page numbers dynamically, this circumvents that.
+                        pages_to_delete = []
 
-                        # Iterate through every page of the student's PDF.
-                        for page_num in range(len(pdf_file.pages)):
-                            page = pdf_file.pages[page_num]
-                            page_text = page.extract_text()
-                            # If page contains only one number, move to the next page (ignore blank pages with just a page number)
+                        # Iterate through every page of the student's pdf, mark blank pages for deletion.
+                        for page_num in range(pdf_file.page_count):
+                            page = pdf_file.load_page(page_num)
+                            page_text = page.get_text("text").strip()
+                            # If page contains only one number, candidate to be ignored.
                             if len(page_text.split(" ")) == 1 and page_text.isdigit():
-                                continue
-                            # Otherwise, write the page to the output pdf.
-                            output_pdf.add_page(page)
-
-                        # Write as {ID}.pdf to STUDENT_PDF_PATH.
-                        with open(os.path.join(STUDENT_PDF_PATH, f"{id}.pdf"), "wb") as output_file:
-                            output_pdf.write(output_file)
+                                # If there are also no images, add page_num to be marked for deletion.
+                                if len(page.get_images()) == 0:
+                                    pages_to_delete.insert(0, page_num)
                         
+                        # Loop through and delete all pages marked as blank.
+                        for page_num in pages_to_delete:
+                            pdf_file.delete_page(page_num)
+                        
+                        # Save result as {ID}.pdf and release control.
+                        pdf_file.save(os.path.join(STUDENT_PDF_PATH, f"{id}.pdf"))
+                        pdf_file.close()
+
                         # Remove the original student pdf.
                         os.remove(os.path.join(STUDENT_PDF_PATH, file))
         except zipfile.BadZipFile:
