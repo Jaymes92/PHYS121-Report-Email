@@ -1,10 +1,10 @@
-from report_generator import create_section_report, initialize_paths
+from report_generator import create_section_report, initialize_paths, cleanup
 from win32com.client import Dispatch
 import json
 
 TA_INFO = json.load(open('TA_info.json', 'r'))
-ASSIGNMENT_NAME = "Pre-Lab 1"
-SECTION_LIST = ["L01", "L02", "L03"]
+ASSIGNMENT_NAME = "Lab 3"
+SECTION_LIST = ["L01", "L02"]
 
 
 initialize_paths(ASSIGNMENT_NAME)
@@ -28,3 +28,5 @@ for section in SECTION_LIST:
     mail.SentOnBehalfOfName = "physics.labs@ubc.ca"
     mail.Attachments.Add(f"h:Python Projects/PHYS121_create_report_and_email/combined-reports/{section}/{ASSIGNMENT_NAME}_{section}.zip")
     mail.Save()
+
+cleanup()

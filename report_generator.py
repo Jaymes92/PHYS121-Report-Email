@@ -3,7 +3,8 @@ from PyPDF2 import PdfMerger
 from zipfile import ZipFile
 import os
 import pandas as pd
-from unzipper import unzip_submissions, STUDENT_PDF_PATH
+import shutil
+from unzipper import unzip_submissions, STUDENT_PDF_PATH, MAIN_ZIP
 
 
 # Name the directories to be created (to hold intermediate cover pages and finished combined reports).
@@ -168,3 +169,12 @@ def create_section_report(sections: list[str]) -> None:
                 
             zip.write(solution_file, os.path.basename(solution_file))
             zip.write(solution_file_full_print, os.path.basename(solution_file_full_print))
+
+
+# Delete submission zip, all temporary directories, and otter-grader grade file to get ready for next batch of submissions.
+def cleanup():
+    os.remove(MAIN_ZIP)
+    os.remove(os.path.join(ASSIGNMENT_NAME, "final_grades.csv"))
+    shutil.rmtree("student-unzip")
+    shutil.rmtree(REPORT_PATH)
+    shutil.rmtree(COVER_PAGE_PATH)
