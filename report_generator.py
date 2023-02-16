@@ -180,8 +180,12 @@ def create_section_report(sections: list[str]) -> None:
                     partner_student_number = partner_student_number.replace('"', "").replace("'", "").replace("(", "").replace(")","").strip()
             # Using the input student number, lookup the name from the Canvas gradebook export. If '...', then None is used for name.
             if partner_student_number != "..." and partner_student_number != None:
-                index = canvas_grades_df[canvas_grades_df["Student Number"] == partner_student_number].index.values[0]
-                partner_name = canvas_grades_df.at[index, "Student"]
+                try:
+                    index = canvas_grades_df[canvas_grades_df["Student Number"] == partner_student_number].index.values[0]
+                    partner_name = canvas_grades_df.at[index, "Student"]
+                except IndexError:
+                    print(f"Error determining partner name with number {partner_student_number} for {student.name} ({student.student_number})'s submission. Assuming none.")
+                    partner_name = None
             else:
                 partner_name = None
 
