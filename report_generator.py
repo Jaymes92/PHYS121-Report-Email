@@ -1,9 +1,10 @@
 from reportlab.pdfgen import canvas
-from PyPDF2 import PdfMerger
+from PyPDF2 import PdfMerger, PdfReader
 from zipfile import ZipFile
 import os
 import pandas as pd
 import shutil
+import re
 from unzipper import unzip_submissions, STUDENT_PDF_PATH, MAIN_ZIP
 
 
@@ -48,10 +49,15 @@ def initialize_paths(assignment: str) -> None:
 
 # Create and save cover page for the passed in student. Saved as "{ID}_cover.pdf" in the REPORT_PATH.
 # Show student name, number, lab section then a summary of the auto-graded results.
-def create_cover_page(student: Student) -> None:
+# Optionally pass in a partner name and student number to also be included on the cover page (None if working solo).
+def create_cover_page(student: Student, partner_name=None, partner_student_number=None) -> None:
     c = canvas.Canvas(os.path.join(COVER_PAGE_PATH, f"{student.id}_cover.pdf"))
-    c.drawString(100, 800, f"Name: {student.name}")
-    c.drawString(100, 780, f"Student Number: {student.student_number}")
+    if partner_name is None:
+        c.drawString(100, 800, f"Name: {student.name}")
+        c.drawString(100, 780, f"Student Number: {student.student_number}")
+    else:
+        c.drawString(100, 800, f"Name: {student.name} and {partner_name}")
+        c.drawString(100, 780, f"Student Number: {student.student_number} and {partner_student_number}")
     c.drawString(100, 760, f"Section: {student.section}")
     
     # Get student autograder results by id, trim first two columns ("file", and "id")
@@ -124,7 +130,7 @@ def create_student_list() -> list[Student]:
 
 # Add a column to the otter-grade export dataframe for student id to reference for creating grades on the cover pages.
 def add_grade_id() -> None:
-    id_list =[]
+    id_list = []
     for file in final_grades_df["file"]:
         # By default the Canvas submissions are named {name}_{id}_{otherstuff}.
         id = file.split("_")[1]
@@ -149,19 +155,56 @@ def create_section_report(sections: list[str]) -> None:
     for section in sections:
         os.makedirs(os.path.join(REPORT_PATH, section), exist_ok=True)
 
-        # Create and combine cover page with student PDF otter-grader export for each student in the given section.
+        # Create and combine cover page with student PDF otter-grader export for each submission in the given section.
         section_student_list = [student for student in students if student.section == section]
         for student in section_student_list:
-            create_cover_page(student)
-            merger = PdfMerger()
-            merger.append(os.path.join(COVER_PAGE_PATH, f"{student.id}_cover.pdf")  )
-            merger.append(os.path.join(STUDENT_PDF_PATH, f"{student.id}.pdf")  )
-            merger.write(os.path.join(REPORT_PATH, section, f"{student.name}_{student.student_number}.pdf"))
-            merger.close()
+            # First, determine the partner name and student number, if any.
+            # Open the student submission pdf.
+            reader = PdfReader(os.path.join(STUDENT_PDF_PATH, f"{student.id}.pdf"))
+            # Student names/numbers always on first page of submission.
+            page = reader.pages[0]
+            # Regex match to find 'student_number_2' entry.
+            partner_student_number = re.search("student_number_2 =(.*)\n", page.extract_text())
+            # If it exists, it will be in the one and only capture group. 
+            # Checking for 'None' is to account for students who mess up their submission and this page is missing.
+            if partner_student_number != None:
+                partner_student_number = partner_student_number.group(1)
+                # Cleanup the match by removing any ' " ( ) characters, and any leading/trailing white space.
+                partner_student_number = partner_student_number.replace('"', "").replace("'", "").replace("(", "").replace(")","").strip()
+            # If student 2 is the one who does the uploading, the 'partner' will already match the given student.
+            # Repeat the above steps for 'student_number_1' in this case, and use that as the partner information.
+            if partner_student_number == student.student_number:
+                partner_student_number = re.search("student_number_1 =(.*)\n", page.extract_text())
+                if partner_student_number != None:
+                    partner_student_number = partner_student_number.group(1)
+                    partner_student_number = partner_student_number.replace('"', "").replace("'", "").replace("(", "").replace(")","").strip()
+            # Using the input student number, lookup the name from the Canvas gradebook export. If '...', then None is used for name.
+            if partner_student_number != "..." and partner_student_number != None:
+                index = canvas_grades_df[canvas_grades_df["Student Number"] == partner_student_number].index.values[0]
+                partner_name = canvas_grades_df.at[index, "Student"]
+            else:
+                partner_name = None
+
+            # If submitter worked solo, save as "{student_nume}_{student_number}.pdf"
+            if partner_name is None:
+                create_cover_page(student)
+                merger = PdfMerger()
+                merger.append(os.path.join(COVER_PAGE_PATH, f"{student.id}_cover.pdf"))
+                merger.append(os.path.join(STUDENT_PDF_PATH, f"{student.id}.pdf"))
+                merger.write(os.path.join(REPORT_PATH, section, f"{student.name}_{student.student_number}.pdf"))
+                merger.close()
+            # If submitter had a partner, save as "{submitter_name}_{submitter_number} and {partner_name}_{partner_number}.pdf"
+            else:
+                create_cover_page(student, partner_name, partner_student_number)
+                merger = PdfMerger()
+                merger.append(os.path.join(COVER_PAGE_PATH, f"{student.id}_cover.pdf"))
+                merger.append(os.path.join(STUDENT_PDF_PATH, f"{student.id}.pdf"))
+                merger.write(os.path.join(REPORT_PATH, section, f"{student.name}_{student.student_number} and {partner_name}_{partner_student_number}.pdf"))
+                merger.close() 
 
         # Take every combined report for students in the given section and put in one .zip for TA distribution.
         with ZipFile(os.path.join(REPORT_PATH, section, f"{ASSIGNMENT_NAME}_{section}.zip"), "w") as zip:
-            for path, directories, files in os.walk(os.path.join(REPORT_PATH,section)):
+            for path, directories, files in os.walk(os.path.join(REPORT_PATH, section)):
                 for file in files:
                     # Have to exclude .zip - otherwise it tries to zip itself (recursively?) and hangs.
                     if not file.endswith(".zip"):
