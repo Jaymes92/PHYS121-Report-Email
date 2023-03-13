@@ -25,9 +25,9 @@
 ```javascript
 {
 "L01": {"email": "ta1@ubc.ca",
-        "name: "TA1_name"},
-"L02": {"email": "ta1@ubc.ca",
-        "name: "TA1_name"}
+        "name": "TA1_name"},
+"L02": {"email": "ta2@ubc.ca",
+        "name": "TA2_name"}
 }
 ```
   - **Location and Name**: Located in root directory and named *TA_info.json*. If it is to be renamed or moved, update the path in `TA_INFO` variable in `main.py`.
