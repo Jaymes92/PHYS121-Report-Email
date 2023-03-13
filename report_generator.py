@@ -59,6 +59,7 @@ def create_cover_page(student: Student, partner_name=None, partner_student_numbe
         c.drawString(100, 800, f"Name: {student.name} and {partner_name}")
         c.drawString(100, 780, f"Student Number: {student.student_number} and {partner_student_number}")
     c.drawString(100, 760, f"Section: {student.section}")
+    c.drawString(100, 740, f"Assignment: {ASSIGNMENT_NAME}")
     
     # Get student autograder results by id, trim first two columns ("file", and "id")
     student_grade_df = final_grades_df.loc[final_grades_df["id"] == student.id].iloc[:, 2:]
@@ -67,44 +68,44 @@ def create_cover_page(student: Student, partner_name=None, partner_student_numbe
     autograde_mark = 0 # Sum of student's auto-graded marks.
     autograde_total = 0 # Sum of totally available auto-graded marks.
 
-    c.drawString(100, 740 - line_index * 20, "AUTO GRADED RESULTS")
+    c.drawString(100, 720 - line_index * 20, "AUTO GRADED RESULTS")
     line_index += 1
 
     # Every auto-graded question that isn't ignored is worth 1. 
     for question_label in student_grade_df.iloc[:, :-1]: # Cut off last column as it is the fractional total grade.
         if question_label not in ignore_questions:
             question_score = student_grade_df.iat[0, question_index - 1] # Q1 is column 0, etc.. so offset by one. Student's grade for this question.
-            c.drawString(100, 740 - line_index * 20, question_label)
-            c.drawString(300, 740 - line_index * 20, str(question_score))
+            c.drawString(100, 720 - line_index * 20, question_label)
+            c.drawString(300, 720 - line_index * 20, str(question_score))
             autograde_mark += question_score
             line_index += 1
             autograde_total += 1
         question_index += 1
 
     percent_grade = student_grade_df.iat[0, question_index - 1] * 100 # Last column is fractional grade total for student.
-    c.drawString(100, 740 - line_index * 20, "-" * 100)
+    c.drawString(100, 720 - line_index * 20, "-" * 100)
     line_index += 1
-    c.drawString(100, 740 - (line_index) * 20, f"Auto Graded Total:")
-    c.drawString(300, 740 - (line_index) * 20, f"{autograde_mark}/{autograde_total}  ({percent_grade:.2f}%)")
+    c.drawString(100, 720 - (line_index) * 20, f"Auto Graded Total:")
+    c.drawString(300, 720 - (line_index) * 20, f"{autograde_mark}/{autograde_total}  ({percent_grade:.2f}%)")
     line_index += 1
-    c.drawString(100, 740 - line_index * 20, "-" * 100)
+    c.drawString(100, 720 - line_index * 20, "-" * 100)
     line_index += 1
-    c.drawString(100, 740 - line_index * 20, "MANUAL GRADED RESULTS")
+    c.drawString(100, 720 - line_index * 20, "MANUAL GRADED RESULTS")
     line_index += 1
     # List of manual_questions is stored as "QUESTION,GRADE", split to format manually graded section to be filled in by TA.
     for question in manual_questions:
         manual_question_name = question.split(",")[0]
         manual_question_grade = question.split(",")[1]
-        c.drawString(100, 740 - line_index * 20, manual_question_name)
-        c.drawString(300, 740 - line_index * 20, f"/{manual_question_grade}")
+        c.drawString(100, 720 - line_index * 20, manual_question_name)
+        c.drawString(300, 720 - line_index * 20, f"/{manual_question_grade}")
         line_index += 1
-    c.drawString(100, 740 - line_index * 20, "-" * 100)
+    c.drawString(100, 720 - line_index * 20, "-" * 100)
     line_index += 1
-    c.drawString(100, 740 - (line_index) * 20, f"Manually Graded Total:")
-    c.drawString(300, 740 - (line_index) * 20, f"/{manual_grade_total}")
+    c.drawString(100, 720 - (line_index) * 20, f"Manually Graded Total:")
+    c.drawString(300, 720 - (line_index) * 20, f"/{manual_grade_total}")
     line_index += 2
-    c.drawString(100, 740 - (line_index) * 20, f"Total grade:")
-    c.drawString(300, 740 - (line_index) * 20, f"/{autograde_total + manual_grade_total}")
+    c.drawString(100, 720 - (line_index) * 20, f"Total grade:")
+    c.drawString(300, 720 - (line_index) * 20, f"/{autograde_total + manual_grade_total}")
 
     c.showPage()
     c.save()
