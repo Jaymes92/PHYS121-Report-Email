@@ -55,7 +55,5 @@
 In ```main.py``` there is the line ```mail.SentOnBehalfOfName = "physics.labs@ubc.ca"```. This causes the e-mails to be sent from this e-mail address. If the user running the scripts does not have this e-mail added to their Outlook, you can comment out this line to have it send from your regular signed-in Outlook e-mail address.
 
 # Running the program:
-1. Add required files. On a daily basis this will be: `submissions.zip` and `final_grades.csv` only. The answer files only ever have to be updated if there are lab changes. The TA information and Canvas gradebook export only have to be updated one per term.
-2. Update the `ASSIGNMENT_NAME` variable in `main.py` to whatever current assignment is being distributed. **The name must match that of the directories used in this project exactly.** (Examples: For lab 2 `ASSIGNMENT_NAME = "Lab 2"`, or for pre-lab 6 `ASSIGNMENT_NAME = "Pre-Lab 6"`
-3. Update `SECTION_LIST` in `main.py` to the sections that are being distributed for the day. It must remain as an array, even if it is being run for only one section.
-4. Run `main.py`.
+1. Add required files. On a daily basis this will be: `submissions.zip` and `final_grades.csv` only, for each assignment being graded. The answer files only ever have to be updated if there are lab changes. The TA information and Canvas gradebook export only have to be updated one per term.
+2. All variables are fed in via the command line. The first argument will be the assignment being distributed, the second is as many lab sections as you would like. So the general syntax is ```py main.py {assignment_name} {lab_section1} {lab_section2}```, where you can add as many lab sections as needed. For example, if you were distributing the assignments for Lab 5 to sections L02, L03, and L04 the command line argument you would run is ```py main.py "Lab 5" L02 L03 L04```.
