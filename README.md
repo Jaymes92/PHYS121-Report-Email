@@ -44,6 +44,16 @@
   - **Format**: This is a full website print (as a pdf) of the solution .ipynb.
   - **Location and Name**: Needs to go in the folder for whatever assignment we are grading/distributing and named `_PHYS 121 - {ASSIGNMENT_NAME} - soln (.ipynb complete print).pdf`. Changes to name/location require updating the path in the `solution_file_full_print` variable - located in `initialze_paths()` in `report_generator.py`.
 
+- ### Assignment config files
+  - **Format**: There are three columns. ```Ignore```, ```Manual Grade```, and ```Manual Questions```.
+    - ```Ignore``` is used to list questions (one per row) that have auto-graded tests, but are worth 0 marks. These are sometimes used to check the format of student's answers, without being worth any marks. Putting them in this column will stop these questions from showing up on the cover pages.
+    - ```Manual Grade``` has just one row which contains the total grade that the manual portion of the lab report is worth.
+    - ```Manual Questions``` is used to list questions (one per row) and the number of marks that question is worth. Each row has a format of {question_name},{question_grade}. For example, if the question labelled 'q3.1' was worth 3 marks, that row would be input as ```q3.1,1```.
+  - **Location and Name**: There is one config file for each assignment. One is located in each individual lab/pre-lab directory. It is named ```{assignment_name} Config.csv```. For example, the path for the config file for lab 5 would be ```/Lab 5/Lab 5 Config.csv```.
+
+# Setting the sending e-mail:
+In ```main.py``` there is the line ```mail.SentOnBehalfOfName = "physics.labs@ubc.ca"```. This causes the e-mails to be sent from this e-mail address. If the user running the scripts does not have this e-mail added to their Outlook, you can comment out this line to have it send from your regular signed-in Outlook e-mail address.
+
 # Running the program:
 1. Add required files. On a daily basis this will be: `submissions.zip` and `final_grades.csv` only. The answer files only ever have to be updated if there are lab changes. The TA information and Canvas gradebook export only have to be updated one per term.
 2. Update the `ASSIGNMENT_NAME` variable in `main.py` to whatever current assignment is being distributed. **The name must match that of the directories used in this project exactly.** (Examples: For lab 2 `ASSIGNMENT_NAME = "Lab 2"`, or for pre-lab 6 `ASSIGNMENT_NAME = "Pre-Lab 6"`
