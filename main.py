@@ -3,10 +3,11 @@ from win32com.client import Dispatch
 import json
 import os
 from pathlib import Path
+import sys
 
 TA_INFO = json.load(open('TA_info.json', 'r'))
-ASSIGNMENT_NAME = "Lab 7"
-SECTION_LIST = ["L01", "L02"]
+ASSIGNMENT_NAME = sys.argv[1]
+SECTION_LIST = sys.argv[2:]
 
 
 initialize_paths(ASSIGNMENT_NAME)
