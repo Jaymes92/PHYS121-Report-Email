@@ -35,11 +35,11 @@ def initialize_paths(assignment: str) -> None:
     global canvas_grades_df, final_grades_df, solution_file, solution_file_full_print, ignore_questions, manual_questions, manual_grade_total, ASSIGNMENT_NAME
     ASSIGNMENT_NAME = assignment
 
-    canvas_grades_df = pd.read_csv("PHYS121 2022W2 Canvas Sheet Export.csv", dtype=str)
+    canvas_grades_df = pd.read_csv("PHYS121 2023W2 Canvas Sheet Export.csv", dtype=str)
     final_grades_df = pd.read_csv(os.path.join(ASSIGNMENT_NAME, "final_grades.csv"))
 
-    solution_file = os.path.join(ASSIGNMENT_NAME, f"_PHYS 121 - {ASSIGNMENT_NAME} - soln.pdf")
-    solution_file_full_print = os.path.join(ASSIGNMENT_NAME, f"_PHYS 121 - {ASSIGNMENT_NAME} - soln (.ipynb complete print).pdf")
+    solution_file = os.path.join(ASSIGNMENT_NAME, f"PHYS 121 - {ASSIGNMENT_NAME} - soln.pdf")
+    solution_file_full_print = os.path.join(ASSIGNMENT_NAME, f"PHYS 121 - {ASSIGNMENT_NAME} - soln (.ipynb complete print).pdf")
 
     assignment_config = pd.read_csv(os.path.join(ASSIGNMENT_NAME, f"{ASSIGNMENT_NAME} Config.csv"))
     ignore_questions = assignment_config["Ignore"].to_list() # List of auto-graded questions worth 0, to be exclued from cover page list.
@@ -71,7 +71,7 @@ def create_cover_page(student: Student, partner_name=None, partner_student_numbe
     c.drawString(100, 720 - line_index * 20, "AUTO GRADED RESULTS")
     line_index += 1
 
-    # Every auto-graded question that isn't ignored is worth 1. 
+    # Every auto-graded question that isn't ignored is worth 1, except name/student number which are 0.5. 
     for question_label in student_grade_df.iloc[:, :-1]: # Cut off last column as it is the fractional total grade.
         if question_label not in ignore_questions:
             question_score = student_grade_df.iat[0, question_index - 1] # Q1 is column 0, etc.. so offset by one. Student's grade for this question.
@@ -79,7 +79,10 @@ def create_cover_page(student: Student, partner_name=None, partner_student_numbe
             c.drawString(300, 720 - line_index * 20, str(question_score))
             autograde_mark += question_score
             line_index += 1
-            autograde_total += 1
+            if question_label in ["name_and_student_number_1", "name_and_student_number_2"]:
+                autograde_total += 0.5
+            else: 
+                autograde_total += 1
         question_index += 1
 
     percent_grade = student_grade_df.iat[0, question_index - 1] * 100 # Last column is fractional grade total for student.
@@ -192,6 +195,7 @@ def create_section_report(sections: list[str]) -> None:
 
             # If submitter worked solo, save as "{student_nume}_{student_number}.pdf"
             if partner_name is None:
+                print(f"creating cover page for {student}")
                 create_cover_page(student)
                 merger = PdfMerger()
                 merger.append(os.path.join(COVER_PAGE_PATH, f"{student.id}_cover.pdf"))
