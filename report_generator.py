@@ -71,6 +71,32 @@ def create_cover_page(student: Student, partner_name=None, partner_student_numbe
     c.drawString(100, 720 - line_index * 20, "AUTO GRADED RESULTS")
     line_index += 1
 
+    # Pre-Lab 1 has no auto graded questions. Treat this case separately.
+    if ASSIGNMENT_NAME == "Pre-Lab 1":
+        c.drawString(100, 720 - line_index * 20, "No auto graded questions in this pre-lab.")
+        line_index += 1
+        c.drawString(100, 720 - line_index * 20, "-" * 100)
+        line_index += 1
+        c.drawString(100, 720 - line_index * 20, "MANUAL GRADED RESULTS")
+        line_index += 1
+        # List of manual_questions is stored as "QUESTION,GRADE", split to format manually graded section to be filled in by TA.
+        for question in manual_questions:
+            manual_question_name = question.split(",")[0]
+            manual_question_grade = question.split(",")[1]
+            c.drawString(100, 720 - line_index * 20, manual_question_name)
+            c.drawString(300, 720 - line_index * 20, f"/{manual_question_grade}")
+            line_index += 1
+        c.drawString(100, 720 - line_index * 20, "-" * 100)
+        line_index += 1
+        c.drawString(100, 720 - (line_index) * 20, f"Manually Graded Total:")
+        c.drawString(300, 720 - (line_index) * 20, f"/{manual_grade_total}")
+        line_index += 2
+        c.drawString(100, 720 - (line_index) * 20, f"Total grade:")
+        c.drawString(300, 720 - (line_index) * 20, f"/{manual_grade_total}")
+        c.showPage()
+        c.save()
+        return
+
     # Every auto-graded question that isn't ignored is worth 1, except name/student number which are 0.5. 
     for question_label in student_grade_df.iloc[:, :-1]: # Cut off last column as it is the fractional total grade.
         if question_label not in ignore_questions:
