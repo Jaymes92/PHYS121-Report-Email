@@ -166,7 +166,7 @@ def create_section_report(sections: list[str]) -> None:
             # Open the student submission pdf.
             reader = PdfReader(os.path.join(STUDENT_PDF_PATH, f"{student.id}.pdf"))
             # Student names/numbers always on first page of submission.
-            page = reader.pages[0]
+            page = reader.pages[1]
             # Regex match to find 'student_number_2' entry.
             partner_student_number = re.search("student_number_2 =(.*)\n", page.extract_text())
             # If it exists, it will be in the one and only capture group. 
@@ -178,6 +178,7 @@ def create_section_report(sections: list[str]) -> None:
             # If student 2 is the one who does the uploading, the 'partner' will already match the given student.
             # Repeat the above steps for 'student_number_1' in this case, and use that as the partner information.
             if partner_student_number == student.student_number:
+                page = reader.pages[0]
                 partner_student_number = re.search("student_number_1 =(.*)\n", page.extract_text())
                 if partner_student_number != None:
                     partner_student_number = partner_student_number.group(1)
@@ -195,7 +196,6 @@ def create_section_report(sections: list[str]) -> None:
 
             # If submitter worked solo, save as "{student_nume}_{student_number}.pdf"
             if partner_name is None:
-                print(f"creating cover page for {student}")
                 create_cover_page(student)
                 merger = PdfMerger()
                 merger.append(os.path.join(COVER_PAGE_PATH, f"{student.id}_cover.pdf"))
@@ -225,8 +225,8 @@ def create_section_report(sections: list[str]) -> None:
 
 # Delete submission zip, all temporary directories, and otter-grader grade file to get ready for next batch of submissions.
 def cleanup():
-    os.remove(MAIN_ZIP)
-    os.remove(os.path.join(ASSIGNMENT_NAME, "final_grades.csv"))
-    shutil.rmtree("student-unzip")
+    # os.remove(MAIN_ZIP)
+    # os.remove(os.path.join(ASSIGNMENT_NAME, "final_grades.csv"))
+    # shutil.rmtree("student-unzip")
     shutil.rmtree(REPORT_PATH)
     shutil.rmtree(COVER_PAGE_PATH)
