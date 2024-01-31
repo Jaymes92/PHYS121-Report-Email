@@ -225,8 +225,8 @@ def create_section_report(sections: list[str]) -> None:
 
 # Delete submission zip, all temporary directories, and otter-grader grade file to get ready for next batch of submissions.
 def cleanup():
-    # os.remove(MAIN_ZIP)
-    # os.remove(os.path.join(ASSIGNMENT_NAME, "final_grades.csv"))
-    # shutil.rmtree("student-unzip")
+    os.remove(MAIN_ZIP)
+    os.remove(os.path.join(ASSIGNMENT_NAME, "final_grades.csv"))
+    shutil.rmtree("student-unzip")
     shutil.rmtree(REPORT_PATH)
     shutil.rmtree(COVER_PAGE_PATH)
