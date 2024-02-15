@@ -191,8 +191,12 @@ def create_section_report(sections: list[str]) -> None:
             # First, determine the partner name and student number, if any.
             # Open the student submission pdf.
             reader = PdfReader(os.path.join(STUDENT_PDF_PATH, f"{student.id}.pdf"))
-            # Student names/numbers always on first page of submission.
-            page = reader.pages[1]
+            # Student names/numbers always on second page of submission for lab reports. Second page may not exist for some pre-labs
+            # so catch exception and use first page. There is no student information in the pre-labs, so this is filler.
+            try: 
+                page = reader.pages[1]
+            except Exception:
+                page = reader.pages[0]
             # Regex match to find 'student_number_2' entry.
             partner_student_number = re.search("student_number_2 =(.*)\n", page.extract_text())
             # If it exists, it will be in the one and only capture group. 
