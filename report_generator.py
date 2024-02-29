@@ -107,6 +107,8 @@ def create_cover_page(student: Student, partner_name=None, partner_student_numbe
             line_index += 1
             if question_label in ["name_and_student_number_1", "name_and_student_number_2"]:
                 autograde_total += 0.5
+            if question_label.lower() == "q3.2" and ASSIGNMENT_NAME == "Pre-Lab 4":
+                autograde_total += 2
             else: 
                 autograde_total += 1
         question_index += 1
@@ -191,14 +193,25 @@ def create_section_report(sections: list[str]) -> None:
             # First, determine the partner name and student number, if any.
             # Open the student submission pdf.
             reader = PdfReader(os.path.join(STUDENT_PDF_PATH, f"{student.id}.pdf"))
-            # Student names/numbers always on second page of submission for lab reports. Second page may not exist for some pre-labs
-            # so catch exception and use first page. There is no student information in the pre-labs, so this is filler.
+            # Second student name/number can sometimes be on page 1 or 2 depending on the assignment. Some pre-labs may also have only one page,
+            # so try to search both (but catch exception when there isn't a second page).
+            partner_student_number = None
+            pages = []
             try: 
                 page = reader.pages[1]
+                pages.append(page)
+                page = reader.pages[0]
+                pages.append(page)
             except Exception:
                 page = reader.pages[0]
+                pages.append(page)
             # Regex match to find 'student_number_2' entry.
-            partner_student_number = re.search("student_number_2 =(.*)\n", page.extract_text())
+            for page in pages:
+                result = re.search("student_number_2 =(.*)\n", page.extract_text())
+                if result:
+                    partner_student_number = result
+
+            #partner_student_number = re.search("student_number_2 =(.*)\n", page.extract_text())
             # If it exists, it will be in the one and only capture group. 
             # Checking for 'None' is to account for students who mess up their submission and this page is missing.
             if partner_student_number != None:
