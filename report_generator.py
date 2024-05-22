@@ -107,7 +107,7 @@ def create_cover_page(student: Student, partner_name=None, partner_student_numbe
             line_index += 1
             if question_label in ["name_and_student_number_1", "name_and_student_number_2"]:
                 autograde_total += 0.5
-            if question_label.lower() == "q3.2" and ASSIGNMENT_NAME == "Pre-Lab 4":
+            elif question_label.lower() == "q3.2" and ASSIGNMENT_NAME == "Pre-Lab 4":
                 autograde_total += 2
             else: 
                 autograde_total += 1
