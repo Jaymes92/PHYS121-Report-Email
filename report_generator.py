@@ -35,8 +35,16 @@ def initialize_paths(assignment: str) -> None:
     global canvas_grades_df, final_grades_df, solution_file, solution_file_full_print, ignore_questions, manual_questions, manual_grade_total, ASSIGNMENT_NAME
     ASSIGNMENT_NAME = assignment
 
-    canvas_grades_df = pd.read_csv("PHYS121 2023W2 Canvas Sheet Export.csv", dtype=str)
+    canvas_grades_df = pd.read_csv("PHYS121 2025W2 Canvas Sheet Export.csv", dtype=str)
     final_grades_df = pd.read_csv(os.path.join(ASSIGNMENT_NAME, "final_grades.csv"))
+
+    # NEW OTTER - first entry will be 'points-per-question' so we must drop this first row and reset the indices.
+    # Last column will be 'grading_status' and third last is 'total_points_earned', also need removal.
+    # Check these exist first, so we can work with both old and new versions of the otter grading outputs.
+    if 'total_points_earned' in final_grades_df.columns:
+        final_grades_df = final_grades_df.iloc[1:].reset_index(drop=True)
+        final_grades_df = final_grades_df.drop(columns=['total_points_earned', 'grading_status'])
+
 
     solution_file = os.path.join(ASSIGNMENT_NAME, f"PHYS 121 - {ASSIGNMENT_NAME} - soln.pdf")
     solution_file_full_print = os.path.join(ASSIGNMENT_NAME, f"PHYS 121 - {ASSIGNMENT_NAME} - soln (.ipynb complete print).pdf")
@@ -72,30 +80,30 @@ def create_cover_page(student: Student, partner_name=None, partner_student_numbe
     line_index += 1
 
     # Pre-Lab 1 has no auto graded questions. Treat this case separately.
-    if ASSIGNMENT_NAME == "Pre-Lab 1":
-        c.drawString(100, 720 - line_index * 20, "No auto graded questions in this pre-lab.")
-        line_index += 1
-        c.drawString(100, 720 - line_index * 20, "-" * 100)
-        line_index += 1
-        c.drawString(100, 720 - line_index * 20, "MANUAL GRADED RESULTS")
-        line_index += 1
-        # List of manual_questions is stored as "QUESTION,GRADE", split to format manually graded section to be filled in by TA.
-        for question in manual_questions:
-            manual_question_name = question.split(",")[0]
-            manual_question_grade = question.split(",")[1]
-            c.drawString(100, 720 - line_index * 20, manual_question_name)
-            c.drawString(300, 720 - line_index * 20, f"/{manual_question_grade}")
-            line_index += 1
-        c.drawString(100, 720 - line_index * 20, "-" * 100)
-        line_index += 1
-        c.drawString(100, 720 - (line_index) * 20, f"Manually Graded Total:")
-        c.drawString(300, 720 - (line_index) * 20, f"/{manual_grade_total}")
-        line_index += 2
-        c.drawString(100, 720 - (line_index) * 20, f"Total grade:")
-        c.drawString(300, 720 - (line_index) * 20, f"/{manual_grade_total}")
-        c.showPage()
-        c.save()
-        return
+    # if ASSIGNMENT_NAME == "Pre-Lab 1":
+    #     c.drawString(100, 720 - line_index * 20, "No auto graded questions in this pre-lab.")
+    #     line_index += 1
+    #     c.drawString(100, 720 - line_index * 20, "-" * 100)
+    #     line_index += 1
+    #     c.drawString(100, 720 - line_index * 20, "MANUAL GRADED RESULTS")
+    #     line_index += 1
+    #     # List of manual_questions is stored as "QUESTION,GRADE", split to format manually graded section to be filled in by TA.
+    #     for question in manual_questions:
+    #         manual_question_name = question.split(",")[0]
+    #         manual_question_grade = question.split(",")[1]
+    #         c.drawString(100, 720 - line_index * 20, manual_question_name)
+    #         c.drawString(300, 720 - line_index * 20, f"/{manual_question_grade}")
+    #         line_index += 1
+    #     c.drawString(100, 720 - line_index * 20, "-" * 100)
+    #     line_index += 1
+    #     c.drawString(100, 720 - (line_index) * 20, f"Manually Graded Total:")
+    #     c.drawString(300, 720 - (line_index) * 20, f"/{manual_grade_total}")
+    #     line_index += 2
+    #     c.drawString(100, 720 - (line_index) * 20, f"Total grade:")
+    #     c.drawString(300, 720 - (line_index) * 20, f"/{manual_grade_total}")
+    #     c.showPage()
+    #     c.save()
+    #     return
 
     # Every auto-graded question that isn't ignored is worth 1, except name/student number which are 0.5. 
     for question_label in student_grade_df.iloc[:, :-1]: # Cut off last column as it is the fractional total grade.
@@ -108,6 +116,8 @@ def create_cover_page(student: Student, partner_name=None, partner_student_numbe
             if question_label in ["name_and_student_number_1", "name_and_student_number_2"]:
                 autograde_total += 0.5
             elif question_label.lower() == "q3.2" and ASSIGNMENT_NAME == "Pre-Lab 4":
+                autograde_total += 2
+            elif question_label.lower() == "q4.1" and ASSIGNMENT_NAME == "Pre-Lab 2":
                 autograde_total += 2
             else: 
                 autograde_total += 1
